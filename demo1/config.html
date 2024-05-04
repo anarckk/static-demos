@@ -30,10 +30,20 @@
             });
             peer.on('connection', function (dataConnection) {
                 console.log('connection', dataConnection);
-                connList.push(dataConnection.id);
+                connList.push(dataConnection.peer);
                 $("#content").val(connList);
                 dataConnection.on('data', function (data) {
+                    console.log('data', data);
                     console.log(dataConnection.id, data);
+                });
+                dataConnection.on('open', function (e) {
+                    console.log('open', e);
+                });
+                dataConnection.on('close', function (e) {
+                    console.log('close', e);
+                });
+                dataConnection.on('error', function (err) {
+                    console.log('error', err);
                 });
             });
             peer.on('call', function (mediaConnection) {
