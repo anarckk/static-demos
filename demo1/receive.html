@@ -35,6 +35,7 @@
             $("#myId").text(id);
         });
         peer.on('connection', function (receiveConn) {
+            console.log(receiveConn);
             $("#status-span").text("连接成功!");
             conn = receiveConn;
             receiveConn.on('data', function (data) {

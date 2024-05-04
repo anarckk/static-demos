@@ -30,7 +30,8 @@
         <div id="receiveHistory" style="height:350px; border: 1px solid pink"></div>
     </div>
     <script>
-        var peer = new Peer('d8064a33-30f3-4d88-bf4b-3e06d51ab7a8');
+        console.log('fuck', Crypto.randomUUID());
+        var peer = new Peer();
         peer.on('open', function (id) {
             $("#status-span").text("加载到了自己的id");
             $("#myId").text(id);
