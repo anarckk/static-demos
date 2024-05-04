@@ -17,32 +17,48 @@
 
 <body>
     <div>myid is [<span id="myId">正在加载中</span>]</div>
-    <div id="content"></div>
+    <div id="content">123</div>
     <script>
         getConfig().subscribe(TOTAL_CONFIG => {
             console.log('连接配置中心', TOTAL_CONFIG.config_id);
             var connList = [];
-            $("#content").val(connList);
+            $("#content").html(JSON.stringify(connList, null, 2));
             var peer = new Peer(TOTAL_CONFIG.config_id);
             peer.on('open', function (id) {
                 console.log('peer open', id);
                 $("#myId").text(id);
             });
             peer.on('connection', function (dataConnection) {
+                let ask = 0;
+                let timer;
                 console.log('peer connection', dataConnection);
-                connList.push(dataConnection.peer);
-                $("#content").val(connList);
                 dataConnection.on('data', function (data) {
                     console.log('dataConnection data', dataConnection.peer, data);
-                    if (data == 'echo') {
-                        dataConnection.send('echo from config');
+                    if (data == TOTAL_CONFIG.REPLAY_ALIVE) {
+                        ask--;
                     }
                 });
                 dataConnection.on('open', function (e) {
                     console.log('dataConnection open', e);
+                    connList.push(dataConnection.peer);
+                    console.log(connList);
+                    $("#content").html(JSON.stringify(connList, null, 2));
+                    timer = setInterval(() => {
+                        if (ask > 1) {
+                            console.log('判断该连接失活');
+                            dataConnection.close();
+                        } else {
+                            dataConnection.send(TOTAL_CONFIG.ASK_ALIVE);
+                            ask++;
+                        }
+                    }, 1000);
                 });
                 dataConnection.on('close', function (e) {
                     console.log('dataConnection close', e);
+                    connList = connList.filter(f => f != dataConnection.peer);
+                    console.log(connList);
+                    $("#content").html(JSON.stringify(connList, null, 2));
+                    if (timer) clearInterval(timer);
                 });
                 dataConnection.on('error', function (err) {
                     console.log('dataConnection error', err);
@@ -64,4 +80,5 @@
         });
     </script>
 </body>
+
 </html>

@@ -34,9 +34,10 @@
     </div>
     <script>
         getConfig().subscribe(TOTAL_CONFIG => {
-            var peer = new Peer();
+            var peer = new Peer(localStorage.myId || undefined);
             peer.on('open', function (id) {
                 console.log('peer open', id);
+                localStorage.myId = id;
                 $("#status-span").text("加载到了自己的id");
                 $("#myId").text(id);
 
@@ -44,6 +45,9 @@
                 var dataConnection = peer.connect(TOTAL_CONFIG.config_id);
                 dataConnection.on('data', function (data) {
                     console.log('dataConnection data', dataConnection.peer, data);
+                    if (data == TOTAL_CONFIG.ASK_ALIVE) {
+                        dataConnection.send(TOTAL_CONFIG.REPLAY_ALIVE);
+                    }
                 });
                 dataConnection.on('open', function (e) {
                     console.log('dataConnection open', e);
@@ -84,9 +88,7 @@
             });
             peer.on('error', function (err) {
                 console.error('peer error', err);
-                // if (err.type == )
             });
-
 
             var conn;
             $("#connect-btn").click(function () {
