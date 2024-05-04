@@ -35,6 +35,9 @@
                 dataConnection.on('data', function (data) {
                     console.log('data', data);
                     console.log(dataConnection.id, data);
+                    if (data == 'echo') {
+                        dataConnection.send('echo from config');
+                    }
                 });
                 dataConnection.on('open', function (e) {
                     console.log('open', e);

@@ -33,57 +33,78 @@
         </div>
     </div>
     <script>
-        var peer = new Peer();
-        peer.on('open', function (id) {
-            console.log('open', id);
-            $("#status-span").text("加载到了自己的id");
-            $("#myId").text(id);
-            getConfig().subscribe(TOTAL_CONFIG => {
+        getConfig().subscribe(TOTAL_CONFIG => {
+            var peer = new Peer();
+            peer.on('open', function (id) {
+                console.log('open', id);
+                $("#status-span").text("加载到了自己的id");
+                $("#myId").text(id);
+
                 console.log('连接配置中心', TOTAL_CONFIG.config_id);
-                var configConn = peer.connect(TOTAL_CONFIG.config_id);
-                configConn.on('open', function (receiveConn) {
-                    console.log('连接成功!')
+                var dataConnection = peer.connect(TOTAL_CONFIG.config_id);
+                dataConnection.on('data', function (data) {
+                    console.log('data', data);
+                    console.log(dataConnection.id, data);
                 });
-                receiveConn.on('data', function (data) {
-                    console.log(data);
-                    $("#receiveHistory").append("<div>" + data + "</div>");
+                dataConnection.on('open', function (e) {
+                    console.log('open', e);
+                    dataConnection.send('echo');
                 });
-            });
-        });
-        peer.on('connection', function (dataConnection) {
-            console.log('connection', dataConnection);
-        });
-        peer.on('call', function (mediaConnection) {
-            console.log('call', mediaConnection);
-        });
-        peer.on('close', function (e) {
-            console.log('close', e);
-        });
-        peer.on('disconnected', function (e) {
-            console.log('disconnected', e);
-            peer.reconnect();
-        });
-        peer.on('error', function (err) {
-            console.error('error', err);
-            // if (err.type == )
-        });
-
-
-        var conn;
-        $("#connect-btn").click(function () {
-            $("#status-span").text("正在连接对方");
-            conn = peer.connect($("#otherId").val());
-            conn.on('open', function () {
-                $("#status-span").text("连接成功!");
-                conn.on('data', function (data) {
-                    $("#receiveHistory").append("<div>" + data + "</div>");
+                dataConnection.on('close', function (e) {
+                    console.log('close', e);
+                });
+                dataConnection.on('error', function (err) {
+                    console.log('error', err);
                 });
             });
-        })
-        $("#send-btn").click(() => {
-            conn.send($("#send-textare").val());
-            $("#history-box").append("<div>" + $("#send-textare").val() + "</div>");
-            $("#send-textare").val("");
+            peer.on('connection', function (dataConnection) {
+                console.log('connection', dataConnection);
+                dataConnection.on('data', function (data) {
+                    console.log('data', data);
+                    console.log(dataConnection.id, data);
+                });
+                dataConnection.on('open', function (e) {
+                    console.log('open', e);
+                });
+                dataConnection.on('close', function (e) {
+                    console.log('close', e);
+                });
+                dataConnection.on('error', function (err) {
+                    console.log('error', err);
+                });
+            });
+            peer.on('call', function (mediaConnection) {
+                console.log('call', mediaConnection);
+            });
+            peer.on('close', function (e) {
+                console.log('close', e);
+            });
+            peer.on('disconnected', function (e) {
+                console.log('disconnected', e);
+                peer.reconnect();
+            });
+            peer.on('error', function (err) {
+                console.error('error', err);
+                // if (err.type == )
+            });
+
+
+            var conn;
+            $("#connect-btn").click(function () {
+                $("#status-span").text("正在连接对方");
+                conn = peer.connect($("#otherId").val());
+                conn.on('open', function () {
+                    $("#status-span").text("连接成功!");
+                    conn.on('data', function (data) {
+                        $("#receiveHistory").append("<div>" + data + "</div>");
+                    });
+                });
+            })
+            $("#send-btn").click(() => {
+                conn.send($("#send-textare").val());
+                $("#history-box").append("<div>" + $("#send-textare").val() + "</div>");
+                $("#send-textare").val("");
+            });
         });
     </script>
 </body>
