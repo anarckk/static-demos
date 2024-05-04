@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>配置中心</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://unpkg.com/rxjs@7.8.1/dist/bundles/rxjs.umd.min.js"></script>
+    <script src="util.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
+<body>
+    <div>myid is [<span id="myId">正在加载中</span>]</div>
+    <div id="content"></div>
+    <script>
+        getConfig().subscribe(TOTAL_CONFIG => {
+            console.log('连接配置中心', TOTAL_CONFIG.config_id);
+            var connList = [];
+            $("#content").val(connList);
+            var peer = new Peer(TOTAL_CONFIG.config_id);
+            peer.on('open', function (id) {
+                console.log('open', id);
+                $("#myId").text(id);
+            });
+            peer.on('connection', function (dataConnection) {
+                console.log('connection', dataConnection);
+                connList.push(dataConnection.id);
+                $("#content").val(connList);
+                dataConnection.on('data', function (data) {
+                    console.log(dataConnection.id, data);
+                });
+            });
+            peer.on('call', function (mediaConnection) {
+                console.log('call', mediaConnection);
+            });
+            peer.on('close', function (e) {
+                console.log('close', e);
+            });
+            peer.on('disconnected', function (e) {
+                console.log('disconnected', e);
+                peer.reconnect();
+            });
+            peer.on('error', function (err) {
+                console.error('error', err);
+            });
+        });
+    </script>
+</body>
+</html>
