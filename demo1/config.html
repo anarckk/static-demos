@@ -25,41 +25,41 @@
             $("#content").val(connList);
             var peer = new Peer(TOTAL_CONFIG.config_id);
             peer.on('open', function (id) {
-                console.log('open', id);
+                console.log('peer open', id);
                 $("#myId").text(id);
             });
             peer.on('connection', function (dataConnection) {
-                console.log('connection', dataConnection);
+                console.log('peer connection', dataConnection);
                 connList.push(dataConnection.peer);
                 $("#content").val(connList);
                 dataConnection.on('data', function (data) {
-                    console.log('data', dataConnection.peer, data);
+                    console.log('dataConnection data', dataConnection.peer, data);
                     if (data == 'echo') {
                         dataConnection.send('echo from config');
                     }
                 });
                 dataConnection.on('open', function (e) {
-                    console.log('open', e);
+                    console.log('dataConnection open', e);
                 });
                 dataConnection.on('close', function (e) {
-                    console.log('close', e);
+                    console.log('dataConnection close', e);
                 });
                 dataConnection.on('error', function (err) {
-                    console.log('error', err);
+                    console.log('dataConnection error', err);
                 });
             });
             peer.on('call', function (mediaConnection) {
-                console.log('call', mediaConnection);
+                console.log('peer call', mediaConnection);
             });
             peer.on('close', function (e) {
-                console.log('close', e);
+                console.log('peer close', e);
             });
             peer.on('disconnected', function (e) {
-                console.log('disconnected', e);
+                console.log('peer disconnected', e);
                 peer.reconnect();
             });
             peer.on('error', function (err) {
-                console.error('error', err);
+                console.error('peer error', err);
             });
         });
     </script>

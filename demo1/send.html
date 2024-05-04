@@ -36,54 +36,54 @@
         getConfig().subscribe(TOTAL_CONFIG => {
             var peer = new Peer();
             peer.on('open', function (id) {
-                console.log('open', id);
+                console.log('peer open', id);
                 $("#status-span").text("加载到了自己的id");
                 $("#myId").text(id);
 
                 console.log('连接配置中心', TOTAL_CONFIG.config_id);
                 var dataConnection = peer.connect(TOTAL_CONFIG.config_id);
                 dataConnection.on('data', function (data) {
-                    console.log('data', dataConnection.peer, data);
+                    console.log('dataConnection data', dataConnection.peer, data);
                 });
                 dataConnection.on('open', function (e) {
-                    console.log('open', e);
+                    console.log('dataConnection open', e);
                     dataConnection.send('echo');
                 });
                 dataConnection.on('close', function (e) {
-                    console.log('close', e);
+                    console.log('dataConnection close', e);
                 });
                 dataConnection.on('error', function (err) {
-                    console.log('error', err);
+                    console.log('dataConnection error', err);
                 });
             });
             peer.on('connection', function (dataConnection) {
-                console.log('connection', dataConnection);
+                console.log('peer connection', dataConnection);
                 dataConnection.on('data', function (data) {
-                    console.log('data', data);
+                    console.log('dataConnection data', data);
                     console.log(dataConnection.id, data);
                 });
                 dataConnection.on('open', function (e) {
-                    console.log('open', e);
+                    console.log('dataConnection open', e);
                 });
                 dataConnection.on('close', function (e) {
-                    console.log('close', e);
+                    console.log('dataConnection close', e);
                 });
                 dataConnection.on('error', function (err) {
-                    console.log('error', err);
+                    console.log('dataConnection error', err);
                 });
             });
             peer.on('call', function (mediaConnection) {
-                console.log('call', mediaConnection);
+                console.log('peer call', mediaConnection);
             });
             peer.on('close', function (e) {
-                console.log('close', e);
+                console.log('peer close', e);
             });
             peer.on('disconnected', function (e) {
-                console.log('disconnected', e);
+                console.log('peer disconnected', e);
                 peer.reconnect();
             });
             peer.on('error', function (err) {
-                console.error('error', err);
+                console.error('peer error', err);
                 // if (err.type == )
             });
 
