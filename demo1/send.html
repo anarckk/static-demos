@@ -43,8 +43,7 @@
                 console.log('连接配置中心', TOTAL_CONFIG.config_id);
                 var dataConnection = peer.connect(TOTAL_CONFIG.config_id);
                 dataConnection.on('data', function (data) {
-                    console.log('data', data);
-                    console.log(dataConnection.id, data);
+                    console.log('data', dataConnection.peer, data);
                 });
                 dataConnection.on('open', function (e) {
                     console.log('open', e);

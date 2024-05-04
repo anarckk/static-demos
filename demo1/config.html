@@ -33,8 +33,7 @@
                 connList.push(dataConnection.peer);
                 $("#content").val(connList);
                 dataConnection.on('data', function (data) {
-                    console.log('data', data);
-                    console.log(dataConnection.id, data);
+                    console.log('data', dataConnection.peer, data);
                     if (data == 'echo') {
                         dataConnection.send('echo from config');
                     }
