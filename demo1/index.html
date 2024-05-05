@@ -27,38 +27,130 @@
         </div>
         <div style="margin-right: 210px;height: 100%;">
             <div>消息日志</div>
-            <div id="history-box" style="height:650px; border: 1px solid pink"></div>
+            <div id="history-box"
+                style="height:650px; border: 1px solid pink; padding: 10px;overflow-y: auto;overflow-x:visible;">
+
+            </div>
             <div>发送方&nbsp;&nbsp;<button id="send-btn">发送</button></div>
             <textarea style="width:100%;height: 100px;" id="send-textare"></textarea>
         </div>
     </div>
     <script>
-        getConfig().subscribe(TOTAL_CONFIG => {
-            var peer = new Peer(localStorage.myId || undefined);
+        let TOTAL_CONFIG;
+        function setMyId(id) {
+            $("#myId").text(id);
+            localStorage.myId = id;
+        }
+        function systemMessage(msg) { // TODO 还要防止xss注入
+            var template = `
+                <div style="margin-bottom: 10px;">
+                    <div style="color: red;font-size: 12px;">{time}</div>
+                    <div style="color: red;max-width: 100%;">{content}</div>
+                </div>
+            `;
+            template = template.replace('{time}', dateFormat(new Date(), "yyyy-MM-dd HH:mm:ss"));
+            template = template.replace('{content}', msg);
+            $("#history-box").append(template);
+        }
+
+        var peerManager = function () {
+            let userList = [];
+            let peer;
+            return {
+                updateUserList: function (_userList) {
+                    let newUserList = _userList.filter(_id => userList.filter(id => _id == id).length == 0);
+                    let offlineUserList = userList.filter(id => _userList.filter(_id => _id == id).length == 0);
+                    if (newUserList.length > 0) {
+                        systemMessage("接收到 " + newUserList.length + "个用户上线");
+                        newUserList.forEach(_id => {
+                            systemMessage("尝试连接到用户 " + _id);
+                            let dataConnection = peer.connect(_id);
+                            dataConnection.on('data', function (data) {
+                                console.log('dataConnection data', dataConnection.peer, data);
+                            });
+                            dataConnection.on('open', function (e) {
+                                console.log('dataConnection open', e);
+                                systemMessage("已连接到用户 " + _id);
+                            });
+                            dataConnection.on('close', function (e) {
+                                console.log('dataConnection close', e);
+                                systemMessage("断开用户 " + _id);
+                            });
+                            dataConnection.on('error', function (err) {
+                                console.log('dataConnection error', err);
+                            });
+                        })
+                    }
+                    if (offlineUserList.length > 0) {
+                        systemMessage("接收到 " + offlineUserList.length + "个用户下线");
+                    }
+                },
+                setPeer: function (_peer) {
+                    peer = _peer;
+                }
+            }
+        }();
+        function connectConfigCenter(peer, configId) {
+            systemMessage("正在连接配置中心");
+            let ask = 0;
+            let timer;
+            let dataConnection = peer.connect(configId);
+            let configIsOpen = false;
+            dataConnection.on('data', function (data) {
+                if (data.type == TOTAL_CONFIG.MSG_TYPE.ASK_ALIVE) {
+                    dataConnection.send({ type: TOTAL_CONFIG.MSG_TYPE.REPLAY_ALIVE });
+                    return;
+                }
+                if (data.type == TOTAL_CONFIG.MSG_TYPE.REPLAY_ALIVE) {
+                    ask--;
+                    return;
+                }
+                if (data.type = TOTAL_CONFIG.MSG_TYPE.USER_LIST) {
+                    peerManager.updateUserList(data.value);
+                }
+                console.log('dataConnection data', dataConnection.peer, data);
+            });
+            dataConnection.on('open', function (e) {
+                console.log('dataConnection open', e);
+                configIsOpen = true;
+                systemMessage("已连接到配置中心 " + dataConnection.peer);
+                timer = setInterval(() => {
+                    if (ask > 1) {
+                        console.log('判断该连接失活');
+                        dataConnection.close();
+                    } else {
+                        dataConnection.send({ type: TOTAL_CONFIG.MSG_TYPE.ASK_ALIVE });
+                        ask++;
+                    }
+                }, 1000);
+            });
+            dataConnection.on('close', function (e) {
+                console.log('dataConnection close', e);
+                configIsOpen = false;
+                systemMessage("断开配置中心");
+                if (timer) clearInterval(timer);
+                ask = 0;
+            });
+            dataConnection.on('error', function (err) {
+                console.log('dataConnection error', err);
+            });
+            return {
+                configIsOpen: () => configIsOpen,
+                close: () => dataConnection.close(),
+            }
+        }
+
+        function start(myId) {
+            let peerIsOpen = false;
+            systemMessage("正在启动中...");
+            var peer = new Peer(myId);
+            peerManager.setPeer(peer);
             peer.on('open', function (id) {
                 console.log('peer open', id);
-                localStorage.myId = id;
-                $("#status-span").text("加载到了自己的id");
-                $("#myId").text(id);
-
-                console.log('连接配置中心', TOTAL_CONFIG.config_id);
-                var dataConnection = peer.connect(TOTAL_CONFIG.config_id);
-                dataConnection.on('data', function (data) {
-                    console.log('dataConnection data', dataConnection.peer, data);
-                    if (data == TOTAL_CONFIG.ASK_ALIVE) {
-                        dataConnection.send(TOTAL_CONFIG.REPLAY_ALIVE);
-                    }
-                });
-                dataConnection.on('open', function (e) {
-                    console.log('dataConnection open', e);
-                    dataConnection.send('echo');
-                });
-                dataConnection.on('close', function (e) {
-                    console.log('dataConnection close', e);
-                });
-                dataConnection.on('error', function (err) {
-                    console.log('dataConnection error', err);
-                });
+                systemMessage("加载到了自己的id " + id);
+                setMyId(id);
+                peerIsOpen = true;
+                connectConfigCenter(peer, TOTAL_CONFIG.config_id);
             });
             peer.on('connection', function (dataConnection) {
                 console.log('peer connection', dataConnection);
@@ -81,13 +173,16 @@
             });
             peer.on('close', function (e) {
                 console.log('peer close', e);
+                peerIsOpen = false;
             });
             peer.on('disconnected', function (e) {
                 console.log('peer disconnected', e);
+                systemMessage("peer disconnected " + e);
                 peer.reconnect();
+                peerIsOpen = false;
             });
             peer.on('error', function (err) {
-                console.error('peer error', err);
+                console.error('peer error', err.type, err);
             });
 
             var conn;
@@ -106,6 +201,14 @@
                 $("#history-box").append("<div>" + $("#send-textare").val() + "</div>");
                 $("#send-textare").val("");
             });
+            return {
+                peerIsOpen: () => peerIsOpen,
+                close: () => dataConnection.close(),
+            }
+        }
+        getConfig().subscribe(_TOTAL_CONFIG => {
+            TOTAL_CONFIG = _TOTAL_CONFIG;
+            start(localStorage.myId || undefined);
         });
     </script>
 </body>
