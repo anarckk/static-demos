@@ -30,7 +30,9 @@
                 connList.forEach(li => {
                     li.conn.send({
                         type: TOTAL_CONFIG.MSG_TYPE.USER_LIST,
-                        value: connList.filter(f => f.id != li.id).map(f => Object.assign({}, { id: f.id }))
+                        value: connList
+                            .filter(f => f.id != li.id)
+                            .map(f => Object.assign({}, { id: f.id }))
                     });
                 });
             }

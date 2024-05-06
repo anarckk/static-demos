@@ -105,3 +105,7 @@ function dateFormat(date, sFormat = 'yyyy-MM-dd') {
         .replace(/w/g, String(time.week))
         .replace(/W/g, week[time.week]);
 }
+
+function currentTimetamp() {
+    return dateFormat(new Date(), "yyyy-MM-dd HH:mm:ss");
+}

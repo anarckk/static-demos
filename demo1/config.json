@@ -3,6 +3,7 @@
     "MSG_TYPE": {
         "ASK_ALIVE": "are you alive?",
         "REPLAY_ALIVE": "yes, i am alive",
-        "USER_LIST": "USER_LIST"
+        "USER_LIST": "USER_LIST",
+        "NEW_MSG": "NEW_MSG"
     }
 }
