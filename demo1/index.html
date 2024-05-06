@@ -13,25 +13,26 @@
         * {
             box-sizing: border-box;
         }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
     </style>
 </head>
 
 <body>
-    <div>myid is [<span id="myId">正在加载中</span>]</div>
-    <div>连接到配置中心: <input style="width: 350px;" /></div>
-    <div style="height: 800px;border: 1px solid black; margin: 20px;">
-        <div style="float: right;border: 1px solid green;height: 100%;width: 200px;">
-            <div>当前连接方</div>
-            <!-- <div style="font-size: 12px;background-color: bisque;margin-bottom: 10px;">a5cb6a46-d146-4d4e-9ee3-be729921e53f</div> -->
-        </div>
-        <div style="margin-right: 210px;height: 100%;">
+    <div style="height: 100%;display: flex;flex-direction:column;padding: 10px;">
+        <div>myid is [<span id="myId">正在加载中</span>]</div>
+        <div style="flex-grow: 1;border: 1px solid black; display: flex;flex-direction:column;">
             <div>消息日志</div>
             <div id="history-box"
-                style="height:650px; border: 1px solid pink; padding: 10px;overflow-y: auto;overflow-x:visible;">
-
+                style="flex-grow: 1;border: 1px solid pink; padding: 10px;overflow-y: auto;overflow-x:visible;">
             </div>
             <div>发送方&nbsp;&nbsp;<button id="send-btn">发送</button></div>
-            <textarea style="width:100%;height: 100px;" id="send-textare"></textarea>
+            <textarea style="width:100%;height: 100px;resize:none" id="send-textare"></textarea>
         </div>
     </div>
     <script>
@@ -206,6 +207,7 @@
                     console.log("按下了回车");
                     sendUserMsg($("#send-textare").val());
                     $("#send-textare").val("");
+                    event.preventDefault();
                 }
             })
         });
