@@ -56,6 +56,7 @@
                 template = template.replace('{time}', currentTimetamp());
                 template = template.replace('{content}', msg);
                 $("#history-box").append(template);
+                autoScroll();
             }
             function receiveUserMsg(data) {
                 console.log('userMsg', data);
@@ -70,8 +71,10 @@
                 template = template.replace('{time}', data.time);
                 template = template.replace('{content}', data.msg);
                 $("#history-box").append(template);
+                autoScroll();
+            }
+            function autoScroll() {
                 setTimeout(() => {
-                    // let scrollTop = $("#history-box").parent().scrollTop();
                     let historyBoxHeight = $("#history-box").height()
                     let parentHeight = $("#history-box").parent().height();
                     let a = historyBoxHeight - parentHeight + 20;
