@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div>
+        <input id="fileInput" type="file">
+    </div>
+    <div>
+        <video id="video" style="height:200px;width:400px;border: 1px solid black;" controls muted controlsList="nodownload"></video>
+    </div>
+    <script>
+        var request = window.indexedDB.open("filesave");
+        request.onerror = function (event) {
+            console.log('onerror', event);
+        };
+        var db;
+        request.onsuccess = function (event) {
+            console.log('onsuccess', event);
+            db = request.result;
+        };
+        request.onupgradeneeded = function (event) {
+            console.log('onupgradeneeded', event);
+            db = event.target.result;
+            var objectStore;
+            if (!db.objectStoreNames.contains('filesave')) {
+                objectStore = db.createObjectStore('filesave', { keyPath: 'id' });
+            }
+        }
+        document.getElementById('fileInput').addEventListener('change', function (e) {
+            var reader = new FileReader();
+            this.files[0].arrayBuffer().then(data => {
+                save(data);
+            })
+        })
+        function save(_blob) {
+            var request = db.transaction(['filesave'], 'readwrite')
+                .objectStore('filesave')
+                .add({ id: 1, data: _blob });
+            request.onsuccess = function (event) {
+                console.log('数据写入成功');
+                get();
+            };
+            request.onerror = function (event) {
+                console.log('数据写入失败');
+            }
+        }
+        function get() {
+            var transaction = db.transaction(['filesave']);
+            var objectStore = transaction.objectStore('filesave');
+            var request = objectStore.get(1);
+
+            request.onerror = function (event) {
+                console.log('事务失败');
+            };
+            request.onsuccess = function (event) {
+                console.log(request.result);
+                let _blob = new Blob([request.result.data]);
+                document.getElementById("video").src = window.URL.createObjectURL(_blob);
+                document.getElementById("video").play();
+            };
+        }
+    </script>
+</body>
+</html>
