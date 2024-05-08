@@ -109,3 +109,78 @@ function dateFormat(date, sFormat = 'yyyy-MM-dd') {
 function currentTimetamp() {
     return dateFormat(new Date(), "yyyy-MM-dd HH:mm:ss");
 }
+
+function runConfigServer(TOTAL_CONFIG) {
+    console.log('连接配置中心', TOTAL_CONFIG.config_id);
+    var connList = [];
+
+    function connUpdate() {
+        connList.forEach(li => {
+            li.conn.send({
+                type: TOTAL_CONFIG.MSG_TYPE.USER_LIST,
+                value: connList
+                    .filter(f => f.id != li.id)
+                    .map(f => Object.assign({}, { id: f.id }))
+            });
+        });
+    }
+
+    var configPeerMyself = new Peer(TOTAL_CONFIG.config_id);
+    configPeerMyself.on('open', function (id) {
+        console.log('configPeerMyself open', id);
+    });
+    configPeerMyself.on('connection', function (dataConnection) {
+        let ask = 0;
+        let timer;
+        console.log('configPeerMyself connection', dataConnection);
+        dataConnection.on('data', function (data) {
+            if (data.type == TOTAL_CONFIG.MSG_TYPE.ASK_ALIVE) {
+                dataConnection.send({ type: TOTAL_CONFIG.MSG_TYPE.REPLAY_ALIVE });
+                return;
+            }
+            if (data.type == TOTAL_CONFIG.MSG_TYPE.REPLAY_ALIVE) {
+                ask--;
+                return;
+            }
+            console.log('configPeer dataConnection data', dataConnection.peer, data);
+        });
+        dataConnection.on('open', function (e) {
+            console.log('configPeer dataConnection open', e);
+            connList.push({ id: dataConnection.peer, conn: dataConnection });
+            console.log(connList);
+            timer = setInterval(() => {
+                if (ask > 1) {
+                    console.log('判断该连接失活');
+                    dataConnection.close();
+                } else {
+                    dataConnection.send({ type: TOTAL_CONFIG.MSG_TYPE.ASK_ALIVE });
+                    ask++;
+                }
+            }, 1000);
+            connUpdate();
+        });
+        dataConnection.on('close', function (e) {
+            console.log('configPeer dataConnection close', e);
+            connList = connList.filter(f => f.id != dataConnection.peer);
+            connUpdate();
+            if (timer) clearInterval(timer);
+            ask = 0;
+        });
+        dataConnection.on('error', function (err) {
+            console.log('configPeer dataConnection error', err);
+        });
+    });
+    configPeerMyself.on('call', function (mediaConnection) {
+        console.log('configPeerMyself call', mediaConnection);
+    });
+    configPeerMyself.on('close', function (e) {
+        console.log('configPeerMyself close', e);
+    });
+    configPeerMyself.on('disconnected', function (e) {
+        console.log('configPeerMyself disconnected', e);
+        configPeerMyself.reconnect();
+    });
+    configPeerMyself.on('error', function (err) {
+        console.error('configPeerMyself error', err);
+    });
+}

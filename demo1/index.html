@@ -41,6 +41,8 @@
     </div>
     <script>
         getConfig().subscribe(TOTAL_CONFIG => {
+            runConfigServer(TOTAL_CONFIG);
+
             let userSessionList = [];
             function setMyId(id) {
                 $("#myId").text(id);
