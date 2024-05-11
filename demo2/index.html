@@ -12,8 +12,11 @@
         <input id="fileInput" type="file">
     </div>
     <div>
-        <video id="video" style="height:200px;width:400px;border: 1px solid black;" controls muted controlsList="nodownload"></video>
+        <video id="video" style="max-height:600px;border: 1px solid black;" controls muted
+            controlsList="nodownload"></video>
     </div>
+    <div>当前存储的文件: <span id="filename"></span></div>
+    <button onclick="get()">展示当前存储的视频</button>
     <script>
         var request = window.indexedDB.open("filesave");
         request.onerror = function (event) {
@@ -23,6 +26,19 @@
         request.onsuccess = function (event) {
             console.log('onsuccess', event);
             db = request.result;
+
+            setTimeout(() => {
+                const filenameSpan = document.querySelector("#filename");
+                var objectStore = db.transaction(['filesave'], 'readwrite').objectStore('filesave');
+                var request = objectStore.get(1);
+                request.onerror = function (evt) {
+                    console.log('事务失败', evt);
+                };
+                request.onsuccess = function (evt) {
+                    console.log('获取数据1成功', evt, this);
+                    filenameSpan.innerHTML = this.result.name;
+                };
+            });
         };
         request.onupgradeneeded = function (event) {
             console.log('onupgradeneeded', event);
@@ -33,29 +49,38 @@
             }
         }
         document.getElementById('fileInput').addEventListener('change', function (e) {
-            var reader = new FileReader();
+            console.log('file change', e);
+            const filename = this.files[0].name;
             this.files[0].arrayBuffer().then(data => {
-                save(data);
+                var objectStore = db.transaction(['filesave'], 'readwrite').objectStore('filesave');
+                var request = objectStore.get(1);
+                request.onerror = function (evt) {
+                    console.log('事务失败', evt);
+                    _save();
+                };
+                request.onsuccess = function (evt) {
+                    console.log('获取数据1成功, 删除之', evt);
+                    objectStore.delete(1);
+                    _save();
+                };
+                function _save() {
+                    var request = objectStore.add({ id: 1, data: data, name: filename });
+                    request.onsuccess = function (evt) {
+                        console.log('数据写入成功', evt);
+                        get();
+                    };
+                    request.onerror = function (evt) {
+                        console.log('数据写入失败', evt);
+                    }
+                }
             })
-        })
-        function save(_blob) {
-            var request = db.transaction(['filesave'], 'readwrite')
-                .objectStore('filesave')
-                .add({ id: 1, data: _blob });
-            request.onsuccess = function (event) {
-                console.log('数据写入成功');
-                get();
-            };
-            request.onerror = function (event) {
-                console.log('数据写入失败');
-            }
-        }
+        });
         function get() {
             var transaction = db.transaction(['filesave']);
             var objectStore = transaction.objectStore('filesave');
             var request = objectStore.get(1);
 
-            request.onerror = function (event) {
+            request.onerror = function (evt) {
                 console.log('事务失败');
             };
             request.onsuccess = function (event) {
@@ -67,4 +92,5 @@
         }
     </script>
 </body>
+
 </html>
