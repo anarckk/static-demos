@@ -4,4 +4,9 @@ demo2 test link: https://anarckk.github.io/static-demos/demo2/   测试indexedDB
 
 demo3 test link: https://anarckk.github.io/static-demos/demo3/   鼠标拖影demo
 
-demo3 test link: https://anarckk.github.io/static-demos/demo4/   简单html div匀速变宽过度动画
+demo4 test link: https://anarckk.github.io/static-demos/demo4/   简单html div匀速变宽过度动画
+
+demo5 test link: https://anarckk.github.io/static-demos/demo5/   svg 酷炫的方块特效
+
+
+
