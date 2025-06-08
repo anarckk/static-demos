@@ -1,9 +1,0 @@
-{
-    "config_id": "dc9dcd2b-d814-4328-a921-0047bc0e3708",
-    "MSG_TYPE": {
-        "ASK_ALIVE": "are you alive?",
-        "REPLAY_ALIVE": "yes, i am alive",
-        "USER_LIST": "USER_LIST",
-        "NEW_MSG": "NEW_MSG"
-    }
-}
